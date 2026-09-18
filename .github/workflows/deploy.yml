@@ -32,6 +32,7 @@ jobs:
         run: |
           cd frontend
           flutter create . --platforms web
+          flutter pub add http
           flutter pub get
           flutter build web --base-href "/${{ github.event.repository.name }}/"
 
