@@ -111,7 +111,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final List<String> _dzongkhags = ['All', 'Thimphu', 'Punakha', 'Paro', 'Chhukha'];
 
   // Replace with your live Render backend URL when deployed (e.g., 'https://your-app.onrender.com/api/v1/feed')
-  final String _baseUrl = 'https://druk-notifier-api.onrender.com/api/v1/feed';
+  final String _baseUrl = 'https://druk-notifier.onrender.com';
 
   @override
   void initState() {
