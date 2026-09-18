@@ -32,7 +32,7 @@ class _DrukNotifierAppState extends State<DrukNotifierApp> {
         primarySwatch: Colors.amber,
         scaffoldBackgroundColor: const Color(0xFFF5F6F8),
         appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFFFF9900), // National Bhutanese Orange
+          backgroundColor: Color(0xFFFF9900),
           foregroundColor: Colors.white,
           elevation: 0,
         ),
@@ -110,7 +110,6 @@ class _HomeScreenState extends State<HomeScreen> {
   final List<String> _categories = ['All', 'Travel', 'Education', 'Finance', 'Health'];
   final List<String> _dzongkhags = ['All', 'Thimphu', 'Punakha', 'Paro', 'Chhukha'];
 
-  // Replace with your live Render backend URL when deployed (e.g., 'https://your-app.onrender.com/api/v1/feed')
   final String _baseUrl = 'https://druk-notifier.onrender.com/api/v1/feed';
 
   @override
@@ -173,7 +172,6 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       body: Column(
         children: [
-          // Filter Controls
           Container(
             color: Colors.white,
             padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
