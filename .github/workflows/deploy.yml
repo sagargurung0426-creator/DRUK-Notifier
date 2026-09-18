@@ -2,7 +2,7 @@ name: Deploy Flutter Web
 
 on:
   push:
-    branches: [ main ] # Change to 'master' if your default branch is named master
+    branches: [ main ]
 
 permissions:
   pages: write
@@ -12,17 +12,25 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: subosito/flutter-action@v2
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter Engine
+        uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
-      - name: Build Web App
-        working-directory: ./frontend
+
+      - name: Build Flutter Web
         run: |
+          cd frontend
           flutter create . --platforms web
           flutter pub get
-          flutter build web --base-href /${{ github.event.repository.name }}/
-      - uses: actions/upload-pages-artifact@v3
+          flutter build web --base-href "/${{ github.event.repository.name }}/"
+
+      - name: Upload Pages Artifact
+        uses: actions/upload-pages-artifact@v3
         with:
           path: ./frontend/build/web
-      - uses: actions/deploy-pages@v4
+
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v4
