@@ -192,7 +192,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           selected: isSelected,
                           selectedColor: const Color(0xFFFF9900),
                           labelStyle: TextStyle(
-                            color: isSelected ? Colors.white : Colors.black80,
+                            color: isSelected ? Colors.white : Colors.black87,
                           ),
                           onSelected: (selected) {
                             setState(() {
@@ -261,7 +261,7 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Padding(
           padding: const EdgeInsets.all(24.0),
           child: Column(
-            mainAxisAlignment: Main.center,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const Icon(Icons.wifi_off, size: 48, color: Colors.grey),
               const SizedBox(height: 12),
@@ -303,7 +303,7 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
-              crossAxisAlignment: Cross.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -345,7 +345,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 const SizedBox(height: 6),
                 Text(
                   widget.isDzongkha ? item.contentDz : item.contentEn,
-                  style: const TextStyle(fontSize: 14, color: Colors.black80),
+                  style: const TextStyle(fontSize: 14, color: Colors.black87),
                 ),
                 const SizedBox(height: 12),
                 Row(
