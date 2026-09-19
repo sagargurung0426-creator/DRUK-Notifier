@@ -11,7 +11,7 @@ app.use(express.json());
 app.use(cors());
 
 // ============================================================================
-// CONFIGURATION: RSS Feeds & Non-RSS Scraper Targets
+// CONFIGURATION: Verified Live RSS Feeds, Government Portals & RBP Scraper
 // ============================================================================
 const SOURCES = [
   // --- NEWS OUTLETS ---
@@ -64,45 +64,73 @@ const SOURCES = [
     name: "Ministry of Home Affairs",
     type: "rss",
     category: "Government",
-    url: "https://moha.gov.bt/feed/"
+    url: "https://www.moha.gov.bt/feed/"
   },
 
-  // --- NON-RSS PORTALS (HTML Scraping via Cheerio) ---
+  // --- EDUCATION PORTAL (Scraper) ---
   {
     id: "bcsea",
-    name: "BCSEA (Board of Examinations and Assessment)",
+    name: "BCSEA (Examinations & Assessment)",
     type: "scrape",
     category: "Education",
     url: "https://www.bcsea.gov.bt/"
+  },
+
+  // --- TRAVEL & ROADBLOCK PORTAL (Scraper) ---
+  {
+    id: "rbp",
+    name: "Royal Bhutan Police (Traffic & Roadblocks)",
+    type: "scrape",
+    category: "Travel",
+    url: "https://rbp.gov.bt/public-announcement/"
   }
 ];
 
+// List of Bhutan Dzongkhags for automatic keyword extraction
+const DZONGKHAGS_LIST = [
+  "Thimphu", "Phuentsholing", "Punakha", "Paro", "Wangdue Phodrang", "Bumthang", 
+  "Trashigang", "Gelephu", "Samtse", "Mongar", "Chukha", "Tsirang", 
+  "Dagana", "Haa", "Lhuntse", "Pemagatshel", "Samdrup Jongkhar", "Sarpang", 
+  "Trashi Yangtse", "Zhemgang", "Gasa"
+];
+
+function detectDzongkhag(text) {
+  if (!text) return "All";
+  for (const dz of DZONGKHAGS_LIST) {
+    if (text.toLowerCase().includes(dz.toLowerCase())) {
+      return dz;
+    }
+  }
+  return "All";
+}
+
 // ============================================================================
-// IN-MEMORY CACHE (Zero Database Required)
-// Caches aggregated results for 5 minutes to prevent rate-limiting.
+// IN-MEMORY CACHE
 // ============================================================================
 let cachedFeedData = [];
 let lastFetchTimestamp = 0;
 const CACHE_DURATION_MS = 5 * 60 * 1000; // 5 minutes
 
-// 1. RSS Parser Worker
 async function fetchRssFeed(source) {
   try {
     const feed = await parser.parseURL(source.url);
     return feed.items.map(item => {
+      const fullText = `${item.title || ""} ${item.contentSnippet || item.content || ""}`;
       const titleLower = (item.title || "").toLowerCase();
+      
       const isUrgent = titleLower.includes('urgent') || 
                        titleLower.includes('alert') || 
                        titleLower.includes('warning') || 
+                       titleLower.includes('roadblock') ||
+                       titleLower.includes('closure') ||
                        titleLower.includes('vacancy') || 
-                       titleLower.includes('tender') ||
-                       titleLower.includes('notice');
+                       titleLower.includes('tender');
 
       return {
         id: `${source.id}-${item.guid || Buffer.from(item.link || '').toString('base64').slice(0, 12)}`,
         agency: source.name,
         category: source.category,
-        dzongkhag: "All",
+        dzongkhag: detectDzongkhag(fullText),
         title_en: item.title || "Untitled Update",
         title_dz: null,
         content_en: item.contentSnippet || item.content || "No content available",
@@ -118,7 +146,6 @@ async function fetchRssFeed(source) {
   }
 }
 
-// 2. Cheerio HTML Scraper Worker (for non-RSS portals like BCSEA)
 async function scrapeHtmlSource(source) {
   try {
     const response = await axios.get(source.url, {
@@ -128,29 +155,28 @@ async function scrapeHtmlSource(source) {
     const $ = cheerio.load(response.data);
     const notices = [];
 
-    // Target list items or announcement elements on the target portal
-    $('li, article, .announcement, .notice-item').each((index, element) => {
+    $('li, article, .announcement, .notice-item, tr').each((index, element) => {
       const text = $(element).text().trim();
       const linkElem = $(element).find('a');
       const link = linkElem.attr('href') || source.url;
       const title = linkElem.text().trim() || text.split('\n')[0];
 
-      if (title && title.length > 10 && (
-          title.toLowerCase().includes('notice') || 
-          title.toLowerCase().includes('exam') || 
-          title.toLowerCase().includes('admit') || 
-          title.toLowerCase().includes('result') ||
-          title.toLowerCase().includes('academic') ||
-          title.toLowerCase().includes('index')
-      )) {
+      if (title && title.length > 8) {
+        const fullText = `${title} ${text}`;
         const titleLower = title.toLowerCase();
-        const isUrgent = titleLower.includes('urgent') || titleLower.includes('alert') || titleLower.includes('important');
+        const isUrgent = titleLower.includes('urgent') || 
+                         titleLower.includes('alert') || 
+                         titleLower.includes('roadblock') || 
+                         titleLower.includes('landslide') ||
+                         titleLower.includes('closure') ||
+                         titleLower.includes('exam') || 
+                         titleLower.includes('result');
 
         notices.push({
           id: `${source.id}-scrape-${index}`,
           agency: source.name,
           category: source.category,
-          dzongkhag: "All",
+          dzongkhag: detectDzongkhag(fullText),
           title_en: title,
           title_dz: null,
           content_en: text.length > 200 ? text.substring(0, 200) + '...' : text,
@@ -162,9 +188,8 @@ async function scrapeHtmlSource(source) {
       }
     });
 
-    // Remove duplicates based on title
     const uniqueNotices = Array.from(new Map(notices.map(item => [item.title_en, item])).values());
-    return uniqueNotices.slice(0, 10); // Keep top relevant notices
+    return uniqueNotices.slice(0, 15);
   } catch (error) {
     console.error(`[Warning] Failed to scrape HTML for ${source.name}:`, error.message);
     return [];
@@ -173,13 +198,11 @@ async function scrapeHtmlSource(source) {
 
 async function getAggregatedData() {
   const now = Date.now();
-  
   if (cachedFeedData.length > 0 && (now - lastFetchTimestamp < CACHE_DURATION_MS)) {
     return cachedFeedData;
   }
 
-  console.log(`[${new Date().toISOString()}] Fetching fresh data from ${SOURCES.length} sources (RSS + HTML Scraper)...`);
-  
+  console.log(`[${new Date().toISOString()}] Fetching fresh data from ${SOURCES.length} sources...`);
   const fetchPromises = SOURCES.map(source => {
     if (source.type === 'rss') return fetchRssFeed(source);
     if (source.type === 'scrape') return scrapeHtmlSource(source);
@@ -189,15 +212,11 @@ async function getAggregatedData() {
   const resultsArrays = await Promise.all(fetchPromises);
   cachedFeedData = resultsArrays.flat();
   lastFetchTimestamp = now;
-  
   cachedFeedData.sort((a, b) => new Date(b.published_at) - new Date(a.published_at));
   
   return cachedFeedData;
 }
 
-// ============================================================================
-// API ENDPOINT
-// ============================================================================
 app.get('/api/v1/feed', async (req, res) => {
   try {
     const { category, dzongkhag } = req.query;
@@ -218,21 +237,17 @@ app.get('/api/v1/feed', async (req, res) => {
       count: results.length,
       data: results,
       meta: {
-        message: "Data aggregated live from RSS feeds and HTML web scrapers. Zero database required.",
+        message: "Data aggregated live from RSS feeds and HTML scrapers.",
         last_updated: new Date(lastFetchTimestamp).toISOString()
       }
     });
   } catch (error) {
     console.error("Error aggregating feeds:", error);
-    res.status(500).json({
-      status: "error",
-      message: "Failed to fetch updates from external sources."
-    });
+    res.status(500).json({ status: "error", message: "Failed to fetch updates." });
   }
 });
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`✅ Druk Notifier multi-source backend running on port ${PORT}`);
-  console.log(`📡 Aggregating RSS and HTML scrapers successfully.`);
+  console.log(`✅ Druk Notifier backend running on port ${PORT}`);
 });
