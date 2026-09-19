@@ -1,6 +1,8 @@
 const express = require('express');
 const cors = require('cors');
 const Parser = require('rss-parser');
+const axios = require('axios');
+const cheerio = require('cheerio');
 
 const app = express();
 const parser = new Parser();
@@ -9,8 +11,7 @@ app.use(express.json());
 app.use(cors());
 
 // ============================================================================
-// CONFIGURATION: Verified Live RSS Feeds for Bhutan
-// Note: Ministries without RSS feeds are omitted. See "Custom Scraping" note below.
+// CONFIGURATION: RSS Feeds & Non-RSS Scraper Targets
 // ============================================================================
 const SOURCES = [
   // --- NEWS OUTLETS ---
@@ -29,7 +30,7 @@ const SOURCES = [
     url: "https://thebhutanese.bt/feed/"
   },
   
-  // --- GOVERNMENT MINISTRIES (Verified RSS Feeds) ---
+  // --- GOVERNMENT MINISTRIES (RSS Feeds) ---
   {
     id: "moh",
     name: "Ministry of Health",
@@ -63,24 +64,33 @@ const SOURCES = [
     name: "Ministry of Home Affairs",
     type: "rss",
     category: "Government",
-    url: "https://www.moha.gov.bt/feed/"
+    url: "https://moha.gov.bt/feed/"
+  },
+
+  // --- NON-RSS PORTALS (HTML Scraping via Cheerio) ---
+  {
+    id: "bcsea",
+    name: "BCSEA (Board of Examinations and Assessment)",
+    type: "scrape",
+    category: "Education",
+    url: "https://www.bcsea.gov.bt/"
   }
 ];
 
 // ============================================================================
 // IN-MEMORY CACHE (Zero Database Required)
-// Caches aggregated results for 5 minutes to prevent rate-limiting from external sites.
+// Caches aggregated results for 5 minutes to prevent rate-limiting.
 // ============================================================================
 let cachedFeedData = [];
 let lastFetchTimestamp = 0;
 const CACHE_DURATION_MS = 5 * 60 * 1000; // 5 minutes
 
+// 1. RSS Parser Worker
 async function fetchRssFeed(source) {
   try {
     const feed = await parser.parseURL(source.url);
     return feed.items.map(item => {
       const titleLower = (item.title || "").toLowerCase();
-      // Auto-detect urgency based on common government/news keywords
       const isUrgent = titleLower.includes('urgent') || 
                        titleLower.includes('alert') || 
                        titleLower.includes('warning') || 
@@ -92,9 +102,9 @@ async function fetchRssFeed(source) {
         id: `${source.id}-${item.guid || Buffer.from(item.link || '').toString('base64').slice(0, 12)}`,
         agency: source.name,
         category: source.category,
-        dzongkhag: "All", // Most RSS feeds do not provide granular dzongkhag metadata
+        dzongkhag: "All",
         title_en: item.title || "Untitled Update",
-        title_dz: null, // Public RSS feeds are predominantly English
+        title_dz: null,
         content_en: item.contentSnippet || item.content || "No content available",
         content_dz: null,
         is_urgent: isUrgent,
@@ -104,23 +114,75 @@ async function fetchRssFeed(source) {
     });
   } catch (error) {
     console.error(`[Warning] Failed to fetch RSS feed for ${source.name}:`, error.message);
-    return []; // Fail gracefully: one broken feed won't crash the whole app
+    return [];
+  }
+}
+
+// 2. Cheerio HTML Scraper Worker (for non-RSS portals like BCSEA)
+async function scrapeHtmlSource(source) {
+  try {
+    const response = await axios.get(source.url, {
+      headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' },
+      timeout: 10000
+    });
+    const $ = cheerio.load(response.data);
+    const notices = [];
+
+    // Target list items or announcement elements on the target portal
+    $('li, article, .announcement, .notice-item').each((index, element) => {
+      const text = $(element).text().trim();
+      const linkElem = $(element).find('a');
+      const link = linkElem.attr('href') || source.url;
+      const title = linkElem.text().trim() || text.split('\n')[0];
+
+      if (title && title.length > 10 && (
+          title.toLowerCase().includes('notice') || 
+          title.toLowerCase().includes('exam') || 
+          title.toLowerCase().includes('admit') || 
+          title.toLowerCase().includes('result') ||
+          title.toLowerCase().includes('academic') ||
+          title.toLowerCase().includes('index')
+      )) {
+        const titleLower = title.toLowerCase();
+        const isUrgent = titleLower.includes('urgent') || titleLower.includes('alert') || titleLower.includes('important');
+
+        notices.push({
+          id: `${source.id}-scrape-${index}`,
+          agency: source.name,
+          category: source.category,
+          dzongkhag: "All",
+          title_en: title,
+          title_dz: null,
+          content_en: text.length > 200 ? text.substring(0, 200) + '...' : text,
+          content_dz: null,
+          is_urgent: isUrgent,
+          published_at: new Date().toISOString(),
+          link: link.startsWith('http') ? link : new URL(link, source.url).toString()
+        });
+      }
+    });
+
+    // Remove duplicates based on title
+    const uniqueNotices = Array.from(new Map(notices.map(item => [item.title_en, item])).values());
+    return uniqueNotices.slice(0, 10); // Keep top relevant notices
+  } catch (error) {
+    console.error(`[Warning] Failed to scrape HTML for ${source.name}:`, error.message);
+    return [];
   }
 }
 
 async function getAggregatedData() {
   const now = Date.now();
   
-  // Return cached data if it's still fresh
   if (cachedFeedData.length > 0 && (now - lastFetchTimestamp < CACHE_DURATION_MS)) {
     return cachedFeedData;
   }
 
-  console.log(`[${new Date().toISOString()}] Fetching fresh data from ${SOURCES.length} external sources...`);
+  console.log(`[${new Date().toISOString()}] Fetching fresh data from ${SOURCES.length} sources (RSS + HTML Scraper)...`);
   
-  // Fetch all sources concurrently for maximum speed
   const fetchPromises = SOURCES.map(source => {
     if (source.type === 'rss') return fetchRssFeed(source);
+    if (source.type === 'scrape') return scrapeHtmlSource(source);
     return [];
   });
 
@@ -128,7 +190,6 @@ async function getAggregatedData() {
   cachedFeedData = resultsArrays.flat();
   lastFetchTimestamp = now;
   
-  // Sort by published date (newest first)
   cachedFeedData.sort((a, b) => new Date(b.published_at) - new Date(a.published_at));
   
   return cachedFeedData;
@@ -140,18 +201,12 @@ async function getAggregatedData() {
 app.get('/api/v1/feed', async (req, res) => {
   try {
     const { category, dzongkhag } = req.query;
-    
-    // Get live (or cached) aggregated data
     let results = await getAggregatedData();
 
-    // Filter by category (e.g., ?category=Government or ?category=News)
     if (category && category !== 'All') {
       results = results.filter(item => item.category.toLowerCase() === category.toLowerCase());
     }
 
-    // Filter by dzongkhag 
-    // Note: Since external RSS feeds rarely tag by dzongkhag, this defaults to showing "All" 
-    // unless you implement custom HTML scraping for specific ministry notice boards.
     if (dzongkhag && dzongkhag !== 'All') {
       results = results.filter(item => 
         item.dzongkhag?.toLowerCase() === dzongkhag.toLowerCase() || item.dzongkhag === 'All'
@@ -163,9 +218,8 @@ app.get('/api/v1/feed', async (req, res) => {
       count: results.length,
       data: results,
       meta: {
-        message: "Data fetched in real-time from external RSS feeds. No database is used.",
-        last_updated: new Date(lastFetchTimestamp).toISOString(),
-        note: "Dzongkhag filtering is limited because most external RSS feeds do not provide location metadata."
+        message: "Data aggregated live from RSS feeds and HTML web scrapers. Zero database required.",
+        last_updated: new Date(lastFetchTimestamp).toISOString()
       }
     });
   } catch (error) {
@@ -180,5 +234,5 @@ app.get('/api/v1/feed', async (req, res) => {
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`✅ Druk Notifier multi-source backend running on port ${PORT}`);
-  console.log(`📡 Aggregating ${SOURCES.length} live sources (Zero Database).`);
+  console.log(`📡 Aggregating RSS and HTML scrapers successfully.`);
 });
