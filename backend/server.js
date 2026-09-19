@@ -9,7 +9,7 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Comprehensive Bhutan Public & Institutional Updates Database
+// Structured Bhutan Public & Institutional Updates Database
 const notifications = [
   // --- BANKS ---
   {
@@ -19,19 +19,10 @@ const notifications = [
     title: 'Announcement on Selection Result for Various Positions',
     date: '2026-09-14',
     summary: 'BoB announced selection results and reporting instructions for IT Officers, Network Administrators, and Site Supervisors.',
-    link: 'https://www.bob.bt/announcement-on-the-selection-result-for-the-various-position-3/'
-  },
-  {
-    id: 2,
-    category: 'banks',
-    entity: 'Bank of Bhutan (BoB)',
-    title: 'BoB Accredited as Accredited Entity (AE)',
-    date: '2026-03-30',
-    summary: 'Bank of Bhutan is officially honoured to announce its accreditation as an Accredited Entity (AE).',
     link: 'https://www.bob.bt/'
   },
   {
-    id: 3,
+    id: 2,
     category: 'banks',
     entity: 'Bhutan National Bank (BNB)',
     title: 'Notice on Digital Banking Security & mBNB Upgrades',
@@ -40,7 +31,7 @@ const notifications = [
     link: 'https://www.bnb.bt/'
   },
   {
-    id: 4,
+    id: 3,
     category: 'banks',
     entity: 'T-Bank',
     title: 'T-Bank SME Special Credit Facilitation Window',
@@ -49,7 +40,7 @@ const notifications = [
     link: 'https://www.tbank.bt/'
   },
   {
-    id: 5,
+    id: 4,
     category: 'banks',
     entity: 'Druk PNB Bank',
     title: 'Quarterly Interest Rate Revision and Deposit Schemes',
@@ -58,7 +49,7 @@ const notifications = [
     link: 'https://www.drukpnbbank.bt/'
   },
   {
-    id: 6,
+    id: 5,
     category: 'banks',
     entity: 'BDBL (Bhutan Development Bank)',
     title: 'Rural Agricultural Credit and Farm Mechanization Support',
@@ -67,7 +58,7 @@ const notifications = [
     link: 'https://www.bdb.bt/'
   },
   {
-    id: 7,
+    id: 6,
     category: 'banks',
     entity: 'DK Bank',
     title: 'Digital Gold Token (TER) Trading & Settlement Notice',
@@ -78,25 +69,16 @@ const notifications = [
 
   // --- TELECOMS ---
   {
-    id: 8,
+    id: 7,
     category: 'telecoms',
     entity: 'Bhutan Telecom (BT)',
     title: 'Shortlisted Candidates for Technical & Administrative Roles',
     date: '2026-09-01',
     summary: 'Bhutan Telecom published shortlisted candidate details following recent recruitment exams.',
-    link: 'https://www.bt.bt/category/news/'
+    link: 'https://www.bt.bt/'
   },
   {
-    id: 9,
-    category: 'telecoms',
-    entity: 'Bhutan Telecom (BT)',
-    title: 'Public Warning Against Copper Earthing Strip & Cable Theft',
-    date: '2026-05-11',
-    summary: 'BT informs the public about increasing thefts of critical telecom infrastructure and urges community vigilance.',
-    link: 'https://www.bt.bt/category/news/'
-  },
-  {
-    id: 10,
+    id: 8,
     category: 'telecoms',
     entity: 'TashiCell',
     title: '4G/5G Network Expansion and Data Pack Revamp',
@@ -107,16 +89,16 @@ const notifications = [
 
   // --- INSURANCE COMPANIES ---
   {
-    id: 11,
+    id: 9,
     category: 'insurance',
-    entity: 'RICB (Royal Insurance Corp of Bhutan)',
+    entity: 'RICB',
     title: 'Special Rebate Scheme 2.0 – Notice to Listed Borrowers',
     date: '2026-08-21',
     summary: 'RICB announces Special Rebate Scheme 2.0 guidelines and outstanding policy lists for eligible beneficiaries.',
-    link: 'https://www.ricb.bt/services/announcements/'
+    link: 'https://www.ricb.bt/'
   },
   {
-    id: 12,
+    id: 10,
     category: 'insurance',
     entity: 'Bhutan Insurance Limited (BIL)',
     title: 'Comprehensive Motor and Health Insurance Online Claims',
@@ -125,29 +107,29 @@ const notifications = [
     link: 'https://www.bhutaninsurance.com.bt/'
   },
 
-  // --- ROADBLOCKS & TRAFFIC (RBP / DoST) ---
+  // --- ROADBLOCKS & TRAFFIC ---
   {
-    id: 13,
+    id: 11,
     category: 'roadblocks',
     entity: 'Royal Bhutan Police (Traffic)',
     title: 'Monsoon Highway Roadblock Updates & Restoration Status',
     date: '2026-09-18',
-    summary: 'RBP and Department of Surface Transport report active clearance work along the lateral road; travelers advised to check schedules before departure.',
-    link: 'https://rbp.gov.bt/public-notification/'
+    summary: 'RBP and Department of Surface Transport report active clearance work along lateral roads; check schedules before departure.',
+    link: 'https://rbp.gov.bt/'
   },
   {
-    id: 14,
+    id: 12,
     category: 'roadblocks',
     entity: 'Royal Bhutan Police (Traffic)',
     title: 'Thimphu-Phuentsholing Highway Safe Travel Advisory',
     date: '2026-09-15',
     summary: 'Traffic division notifies specific timing windows for heavy vehicles and landslide-prone sectors near Chukha.',
-    link: 'https://rbp.gov.bt/public-notification/'
+    link: 'https://rbp.gov.bt/'
   },
 
-  // --- MINISTRIES & DZONGKHAGS ---
+  // --- MINISTRIES ---
   {
-    id: 15,
+    id: 13,
     category: 'ministries',
     entity: 'Ministry of Finance (MoF)',
     title: 'Business Income Tax (BIT) Filing Guidelines for 2026',
@@ -156,7 +138,7 @@ const notifications = [
     link: 'https://www.mof.gov.bt/'
   },
   {
-    id: 16,
+    id: 14,
     category: 'ministries',
     entity: 'Ministry of Infrastructure and Transport',
     title: 'Public Transport Fare Adjustments & Route Permits',
@@ -164,27 +146,29 @@ const notifications = [
     summary: 'MoIT releases updated inter-dzongkhag bus schedules and standardized passenger fare structures.',
     link: 'https://www.moit.gov.bt/'
   },
+
+  // --- DZONGKHAGS ---
   {
-    id: 17,
+    id: 15,
     category: 'dzongkhags',
     entity: 'Thimphu Thromde',
-    title: 'Municipal Waste Collection Schedule & Water Supply Maintenance',
+    title: 'Municipal Waste Collection Schedule & Water Maintenance',
     date: '2026-09-16',
     summary: 'Thromde office publishes revised garbage truck timings and temporary zone water shutdowns for pipeline upgrades.',
     link: 'https://www.thimphu.gov.bt/'
   },
   {
-    id: 18,
+    id: 16,
     category: 'dzongkhags',
     entity: 'Chukha Dzongkhag Administration',
-    title: 'Gewog Development Grant Allocation and Public Consultation',
+    title: 'Gewog Development Grant Allocation and Consultation',
     date: '2026-09-10',
     summary: 'Chukha Dzongkhag invites local stakeholders for developmental budget reviews and agricultural project updates.',
     link: 'https://www.chukha.gov.bt/'
   }
 ];
 
-// API Endpoint to get notifications with filters
+// API Endpoints
 app.get('/api/notifications', (req, res) => {
   const { category, entity, search } = req.query;
   let results = [...notifications];
@@ -209,19 +193,18 @@ app.get('/api/notifications', (req, res) => {
   res.json(results);
 });
 
-// Get unique entity names grouped by category for dropdowns
 app.get('/api/entities', (req, res) => {
   const entitiesByCategory = {
     banks: ['Bank of Bhutan (BoB)', 'Bhutan National Bank (BNB)', 'T-Bank', 'Druk PNB Bank', 'BDBL (Bhutan Development Bank)', 'DK Bank'],
     telecoms: ['Bhutan Telecom (BT)', 'TashiCell'],
-    insurance: ['RICB (Royal Insurance Corp of Bhutan)', 'Bhutan Insurance Limited (BIL)'],
+    insurance: ['RICB', 'Bhutan Insurance Limited (BIL)'],
     roadblocks: ['Royal Bhutan Police (Traffic)', 'Department of Surface Transport'],
-    ministries: ['Ministry of Finance (MoF)', 'Ministry of Infrastructure and Transport', 'Ministry of Health', 'Ministry of Education and Skills Development'],
-    dzongkhags: ['Thimphu Thromde', 'Chukha Dzongkhag Administration', 'Paro Dzongkhag', 'Punakha Dzongkhag', 'Phuentsholing Thromde']
+    ministries: ['Ministry of Finance (MoF)', 'Ministry of Infrastructure and Transport'],
+    dzongkhags: ['Thimphu Thromde', 'Chukha Dzongkhag Administration']
   };
   res.json(entitiesByCategory);
 });
 
 app.listen(PORT, () => {
-  console.log(`DRUK Notifier server running on http://localhost:${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
