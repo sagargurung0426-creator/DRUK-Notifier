@@ -1,6 +1,6 @@
 {
-    "name": "frontend",
-    "short_name": "frontend",
+    "name": "druk_notifier",
+    "short_name": "druk_notifier",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
