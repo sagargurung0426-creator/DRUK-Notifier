@@ -3,12 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DRUK Notifier - Comprehensive Public Information Portal</title>
+  <title>DRUK Notifier - Public Information Portal</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --primary: #c5221f; /* Bhutan Red accent */
-      --primary-dark: #9e1a17;
+      --primary: #c5221f;
       --bg-color: #f8fafc;
       --card-bg: #ffffff;
       --text-main: #1e293b;
@@ -45,7 +44,6 @@
       max-width: 350px;
     }
 
-    /* Tabs Styling */
     .tabs {
       display: flex;
       gap: 8px;
@@ -68,12 +66,8 @@
       transition: all 0.2s;
     }
 
-    .tab-btn.active {
-      color: var(--primary);
-      border-bottom-color: var(--primary);
-    }
+    .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
 
-    /* Filters Section */
     .filters-section {
       background: var(--card-bg);
       padding: 16px 24px;
@@ -83,10 +77,9 @@
       display: flex;
       gap: 16px;
       align-items: center;
-      flex-wrap: wrap;
     }
 
-    .filter-group { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 220px; }
+    .filter-group { display: flex; flex-direction: column; gap: 6px; flex: 1; max-width: 300px; }
     .filter-group label { font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; }
     .filter-group select {
       padding: 10px;
@@ -97,7 +90,6 @@
       color: var(--text-main);
     }
 
-    /* Grid layout for cards */
     .grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
@@ -113,38 +105,16 @@
       flex-direction: column;
       justify-content: space-between;
       border-top: 4px solid var(--primary);
-      transition: transform 0.2s, box-shadow 0.2s;
     }
-
-    .card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
 
     .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; gap: 8px; }
-    .badge {
-      background: #f1f5f9;
-      color: var(--text-muted);
-      font-size: 11px;
-      font-weight: 600;
-      padding: 4px 8px;
-      border-radius: 6px;
-      text-transform: uppercase;
-    }
+    .badge { background: #f1f5f9; color: var(--text-muted); font-size: 11px; font-weight: 600; padding: 4px 8px; border-radius: 6px; text-transform: uppercase; }
     .date { font-size: 12px; color: var(--text-muted); font-weight: 500; }
-
     .card-title { font-size: 16px; font-weight: 600; color: var(--text-main); margin-bottom: 8px; }
     .card-summary { font-size: 14px; color: var(--text-muted); margin-bottom: 16px; }
-
     .card-footer { display: flex; justify-content: flex-end; align-items: center; border-top: 1px solid var(--border-color); padding-top: 12px; }
-    .source-link {
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--primary);
-      text-decoration: none;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
+    .source-link { font-size: 13px; font-weight: 600; color: var(--primary); text-decoration: none; }
     .source-link:hover { text-decoration: underline; }
-
     .no-results { grid-column: 1 / -1; text-align: center; padding: 40px; color: var(--text-muted); background: var(--card-bg); border-radius: 12px; }
   </style>
 </head>
@@ -153,10 +123,9 @@
     <header>
       <div class="header-top">
         <h1>🇳🇵 <span>DRUK Notifier</span> Public Hub</h1>
-        <input type="text" id="searchInput" class="search-bar" placeholder="Search notices, banks, roadblocks...">
+        <input type="text" id="searchInput" class="search-bar" placeholder="Search announcements, roadblocks...">
       </div>
 
-      <!-- Precise Tabs -->
       <div class="tabs" id="categoryTabs">
         <button class="tab-btn active" data-category="all">All Updates</button>
         <button class="tab-btn" data-category="banks">Banks</button>
@@ -168,7 +137,6 @@
       </div>
     </header>
 
-    <!-- Specific Entity Dropdown Filter -->
     <div class="filters-section">
       <div class="filter-group">
         <label for="entitySelect">Filter by Specific Entity</label>
@@ -178,10 +146,7 @@
       </div>
     </div>
 
-    <!-- Notification Cards Grid -->
-    <div class="grid" id="notificationsGrid">
-      <!-- Dynamic cards injected here -->
-    </div>
+    <div class="grid" id="notificationsGrid"></div>
   </div>
 
   <script>
@@ -197,9 +162,7 @@
       try {
         const res = await fetch('/api/entities');
         entitiesData = await res.json();
-      } catch (err) {
-        console.error('Failed to load entities', err);
-      }
+      } catch (err) { console.error(err); }
     }
 
     function updateEntityDropdown(category) {
@@ -219,19 +182,12 @@
     }
 
     async function fetchNotifications() {
-      const category = activeCategory;
-      const entity = entitySelect.value;
-      const search = searchInput.value;
-
-      let url = `/api/notifications?category=${category}&entity=${encodeURIComponent(entity)}&search=${encodeURIComponent(search)}`;
-      
+      const url = `/api/notifications?category=${activeCategory}&entity=${encodeURIComponent(entitySelect.value)}&search=${encodeURIComponent(searchInput.value)}`;
       try {
         const res = await fetch(url);
         const data = await res.json();
         renderCards(data);
-      } catch (err) {
-        console.error('Failed to fetch notifications', err);
-      }
+      } catch (err) { console.error(err); }
     }
 
     function renderCards(items) {
@@ -240,7 +196,6 @@
         grid.innerHTML = `<div class="no-results">No updates found matching your criteria.</div>`;
         return;
       }
-
       items.forEach(item => {
         const card = document.createElement('div');
         card.className = 'card';
@@ -261,7 +216,6 @@
       });
     }
 
-    // Event Listeners
     categoryTabs.addEventListener('click', (e) => {
       if (e.target.classList.contains('tab-btn')) {
         document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
@@ -275,13 +229,11 @@
     entitySelect.addEventListener('change', fetchNotifications);
     searchInput.addEventListener('input', fetchNotifications);
 
-    // Initial Load
     async function init() {
       await loadEntities();
       updateEntityDropdown('all');
       fetchNotifications();
     }
-
     init();
   </script>
 </body>
