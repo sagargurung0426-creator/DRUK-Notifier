@@ -32,7 +32,8 @@ jobs:
         run: |
           cd frontend
           flutter pub get
-          flutter build web --base-href "/${{ github.event.repository.name }}/"
+          flutter create . --platforms web
+          flutter build web --release
 
       - name: Upload Pages Artifact
         uses: actions/upload-pages-artifact@v3
