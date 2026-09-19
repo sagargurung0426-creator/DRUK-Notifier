@@ -350,7 +350,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 const SizedBox(height: 12),
                 Row(
-                  mainAxisAlignment: Main.spaceBetween,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Chip(
                       label: Text(
