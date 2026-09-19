@@ -6,6 +6,10 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+app.get('/', (req, res) => {
+  res.send('Druk Notifier API is up and running!');
+});
+
 // Initialize Firebase Admin for FCM Push Notifications
 // Add your Firebase Service Account JSON string in environment variable: FIREBASE_SERVICE_ACCOUNT
 if (process.env.FIREBASE_SERVICE_ACCOUNT) {
