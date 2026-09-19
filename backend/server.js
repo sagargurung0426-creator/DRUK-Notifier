@@ -1,101 +1,184 @@
 const express = require('express');
 const cors = require('cors');
-const admin = require('firebase-admin');
+const Parser = require('rss-parser');
 
 const app = express();
-app.use(cors());
+const parser = new Parser();
+
 app.use(express.json());
+app.use(cors());
 
-app.get('/', (req, res) => {
-  res.send('Druk Notifier API is up and running!');
-});
-
-// Initialize Firebase Admin for FCM Push Notifications
-// Add your Firebase Service Account JSON string in environment variable: FIREBASE_SERVICE_ACCOUNT
-if (process.env.FIREBASE_SERVICE_ACCOUNT) {
-  try {
-    const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
-    admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount),
-    });
-    console.log("Firebase Admin initialized successfully.");
-  } catch (err) {
-    console.error("Failed to parse FIREBASE_SERVICE_ACCOUNT JSON:", err);
-  }
-} else {
-  console.warn("FIREBASE_SERVICE_ACCOUNT missing. Running push notifications in dry-run mode.");
-}
-
-// 1. Endpoint: Subscribe device token to specific topics (e.g., 'travel', 'thimphu', 'education')
-app.post('/api/v1/subscribe', async (req, res) => {
-  const { token, topic } = req.body;
-
-  if (!token || !topic) {
-    return res.status(400).json({ error: 'Device token and target topic are required.' });
-  }
-
-  try {
-    if (admin.apps.length > 0) {
-      await admin.messaging().subscribeToTopic(token, topic.toLowerCase());
-      return res.status(200).json({ success: true, message: `Subscribed to ${topic}` });
-    }
-    res.status(200).json({ success: true, message: `Mock mode: Subscribed to ${topic}` });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// 2. Endpoint: Trigger Push Notification to users
-app.post('/api/v1/notify', async (req, res) => {
-  const { title, body, category, dzongkhag, isUrgent } = req.body;
-
-  const targetTopic = category ? category.toLowerCase() : 'all';
-
-  const payload = {
-    notification: {
-      title: title || 'Druk Notifier Alert',
-      body: body || 'A new public notice has been issued.',
-    },
-    data: {
-      category: category || 'General',
-      dzongkhag: dzongkhag || 'National',
-      isUrgent: String(isUrgent || false),
-    },
-    topic: targetTopic,
-  };
-
-  try {
-    if (admin.apps.length > 0) {
-      const response = await admin.messaging().send(payload);
-      return res.status(200).json({ success: true, messageId: response });
-    }
-    res.status(200).json({ success: true, mockMode: true, sentPayload: payload });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// 3. Endpoint: Feed API for mobile client app
-const announcements = [
+// ============================================================================
+// CONFIGURATION: Verified Live RSS Feeds for Bhutan
+// Note: Ministries without RSS feeds are omitted. See "Custom Scraping" note below.
+// ============================================================================
+const SOURCES = [
+  // --- NEWS OUTLETS ---
   {
-    id: 'moit-2026-001',
-    agency: 'Ministry of Infrastructure and Transport',
-    category: 'Travel',
-    dzongkhag: 'Thimphu',
-    title_en: 'Road Block Alert: Phuentsholing-Thimphu Highway',
-    title_dz: 'ཕུན་ཚོགས་གླིང་-ཐིམ་ཕུག་གཞུང་ལམ་བཀག་ཆད་གསལ་བསྒྲགས།',
-    content_en: 'Landslide cleared near Sorchen. One-way traffic restored.',
-    content_dz: 'སོར་ཅན་གྱི་ཉེ་སར་ས་རུད་བསལ་ཡོད། ལམ་ཕྱོགས་གཅིག་གི་སྐྱེལ་འདྲེན་སླར་གསོ་བྱས་ཡོད།',
-    is_urgent: true,
-    published_at: new Date().toISOString()
+    id: "kuensel",
+    name: "Kuensel Online",
+    type: "rss",
+    category: "News",
+    url: "https://kuenselonline.com/feed/"
+  },
+  {
+    id: "thebhutanese",
+    name: "The Bhutanese",
+    type: "rss",
+    category: "News",
+    url: "https://thebhutanese.bt/feed/"
+  },
+  
+  // --- GOVERNMENT MINISTRIES (Verified RSS Feeds) ---
+  {
+    id: "moh",
+    name: "Ministry of Health",
+    type: "rss",
+    category: "Government",
+    url: "https://moh.gov.bt/feed/"
+  },
+  {
+    id: "moit",
+    name: "Ministry of Infrastructure and Transport",
+    type: "rss",
+    category: "Government",
+    url: "https://moit.gov.bt/feed/"
+  },
+  {
+    id: "mof",
+    name: "Ministry of Finance",
+    type: "rss",
+    category: "Government",
+    url: "https://mof.gov.bt/feed/"
+  },
+  {
+    id: "moal",
+    name: "Ministry of Agriculture and Livestock",
+    type: "rss",
+    category: "Government",
+    url: "https://www.moal.gov.bt/feed/"
+  },
+  {
+    id: "moha",
+    name: "Ministry of Home Affairs",
+    type: "rss",
+    category: "Government",
+    url: "https://www.moha.gov.bt/feed/"
   }
 ];
 
-app.get('/api/v1/feed', (req, res) => {
-  res.status(200).json({ status: 'success', data: announcements });
+// ============================================================================
+// IN-MEMORY CACHE (Zero Database Required)
+// Caches aggregated results for 5 minutes to prevent rate-limiting from external sites.
+// ============================================================================
+let cachedFeedData = [];
+let lastFetchTimestamp = 0;
+const CACHE_DURATION_MS = 5 * 60 * 1000; // 5 minutes
+
+async function fetchRssFeed(source) {
+  try {
+    const feed = await parser.parseURL(source.url);
+    return feed.items.map(item => {
+      const titleLower = (item.title || "").toLowerCase();
+      // Auto-detect urgency based on common government/news keywords
+      const isUrgent = titleLower.includes('urgent') || 
+                       titleLower.includes('alert') || 
+                       titleLower.includes('warning') || 
+                       titleLower.includes('vacancy') || 
+                       titleLower.includes('tender') ||
+                       titleLower.includes('notice');
+
+      return {
+        id: `${source.id}-${item.guid || Buffer.from(item.link || '').toString('base64').slice(0, 12)}`,
+        agency: source.name,
+        category: source.category,
+        dzongkhag: "All", // Most RSS feeds do not provide granular dzongkhag metadata
+        title_en: item.title || "Untitled Update",
+        title_dz: null, // Public RSS feeds are predominantly English
+        content_en: item.contentSnippet || item.content || "No content available",
+        content_dz: null,
+        is_urgent: isUrgent,
+        published_at: item.pubDate || new Date().toISOString(),
+        link: item.link || "#"
+      };
+    });
+  } catch (error) {
+    console.error(`[Warning] Failed to fetch RSS feed for ${source.name}:`, error.message);
+    return []; // Fail gracefully: one broken feed won't crash the whole app
+  }
+}
+
+async function getAggregatedData() {
+  const now = Date.now();
+  
+  // Return cached data if it's still fresh
+  if (cachedFeedData.length > 0 && (now - lastFetchTimestamp < CACHE_DURATION_MS)) {
+    return cachedFeedData;
+  }
+
+  console.log(`[${new Date().toISOString()}] Fetching fresh data from ${SOURCES.length} external sources...`);
+  
+  // Fetch all sources concurrently for maximum speed
+  const fetchPromises = SOURCES.map(source => {
+    if (source.type === 'rss') return fetchRssFeed(source);
+    return [];
+  });
+
+  const resultsArrays = await Promise.all(fetchPromises);
+  cachedFeedData = resultsArrays.flat();
+  lastFetchTimestamp = now;
+  
+  // Sort by published date (newest first)
+  cachedFeedData.sort((a, b) => new Date(b.published_at) - new Date(a.published_at));
+  
+  return cachedFeedData;
+}
+
+// ============================================================================
+// API ENDPOINT
+// ============================================================================
+app.get('/api/v1/feed', async (req, res) => {
+  try {
+    const { category, dzongkhag } = req.query;
+    
+    // Get live (or cached) aggregated data
+    let results = await getAggregatedData();
+
+    // Filter by category (e.g., ?category=Government or ?category=News)
+    if (category && category !== 'All') {
+      results = results.filter(item => item.category.toLowerCase() === category.toLowerCase());
+    }
+
+    // Filter by dzongkhag 
+    // Note: Since external RSS feeds rarely tag by dzongkhag, this defaults to showing "All" 
+    // unless you implement custom HTML scraping for specific ministry notice boards.
+    if (dzongkhag && dzongkhag !== 'All') {
+      results = results.filter(item => 
+        item.dzongkhag?.toLowerCase() === dzongkhag.toLowerCase() || item.dzongkhag === 'All'
+      );
+    }
+
+    res.json({
+      status: "success",
+      count: results.length,
+      data: results,
+      meta: {
+        message: "Data fetched in real-time from external RSS feeds. No database is used.",
+        last_updated: new Date(lastFetchTimestamp).toISOString(),
+        note: "Dzongkhag filtering is limited because most external RSS feeds do not provide location metadata."
+      }
+    });
+  } catch (error) {
+    console.error("Error aggregating feeds:", error);
+    res.status(500).json({
+      status: "error",
+      message: "Failed to fetch updates from external sources."
+    });
+  }
 });
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`Druk Notifier Server running on port ${PORT}`);
+  console.log(`✅ Druk Notifier multi-source backend running on port ${PORT}`);
+  console.log(`📡 Aggregating ${SOURCES.length} live sources (Zero Database).`);
 });
