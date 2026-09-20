@@ -25,15 +25,19 @@
 
     .container { max-width: 1200px; margin: 0 auto; }
 
+    /* Sticky Header */
     header {
       background: var(--card-bg);
       padding: 24px;
       border-radius: 12px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
       margin-bottom: 24px;
       display: flex;
       flex-direction: column;
       gap: 16px;
+      position: sticky;
+      top: 20px;
+      z-index: 1000;
     }
 
     .header-top { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
@@ -162,7 +166,7 @@
     }
 
     async function fetchFeeds() {
-      if (isRoadWatchMode) return; // Don't fetch standard feeds if RoadWatch view is active
+      if (isRoadWatchMode) return;
 
       const entitySelect = document.getElementById('entityDropdown');
       const selectedEntity = entitySelect.value;
@@ -264,12 +268,11 @@
       const rwBtn = document.getElementById('roadwatchBtn');
       dropdown.innerHTML = '<option value="all">-- All Entities in Category --</option>';
 
-      // Show RoadWatch button only when "roadblocks" tab is active
       if (category === 'roadblocks') {
         rwBtn.classList.add('visible');
       } else {
         rwBtn.classList.remove('visible');
-        if (isRoadWatchMode) toggleRoadWatchView(); // Reset view if switching tabs
+        if (isRoadWatchMode) toggleRoadWatchView();
       }
 
       if (entitiesMap[category] && entitiesMap[category].length > 0) {
@@ -318,7 +321,6 @@
       }
     }
 
-    // Initialize on load
     loadEntitiesMap().then(() => fetchFeeds());
   </script>
 </body>
