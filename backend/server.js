@@ -8,12 +8,12 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-// Serve static files from the 'public' folder
-app.use(express.static(path.join(__dirname, 'public')));
+// Serve static files from the 'frontend' folder (stepping out of backend/)
+app.use(express.static(path.join(__dirname, '../frontend')));
 
-// Explicit root route handler for deployment routing
+// Explicit root route handler pointing to index.html in the frontend folder
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  res.sendFile(path.join(__dirname, '../frontend', 'index.html'));
 });
 
 // --- LIVE DATA API: Fetches real-time earthquake and disaster feeds dynamically ---
