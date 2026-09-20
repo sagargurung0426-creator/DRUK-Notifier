@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DRUK Notifier - Live Public & Disaster Portal</title>
+  <title>DRUK Notifier - Live Official Feeds & Circulars</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -15,6 +15,7 @@
       --text-muted: #64748b;
       --border-color: #e2e8f0;
       --warning: #d97706;
+      --fuel-color: #0284c7;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
@@ -42,7 +43,10 @@
     .btn:hover { background: var(--primary-dark); }
     .btn-warning { background: var(--warning); }
 
-    .search-bar { padding: 10px 16px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 14px; width: 100%; max-width: 280px; }
+    .search-bar, .entity-select { padding: 10px 14px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 14px; outline: none; }
+    .search-bar { width: 240px; }
+    .entity-select { display: none; background: white; font-weight: 500; color: var(--text-main); }
+    .entity-select.visible { display: inline-block; }
 
     .tabs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; border-bottom: 2px solid var(--border-color); }
     .tab-btn { background: none; border: none; padding: 10px 16px; font-size: 14px; font-weight: 600; color: var(--text-muted); cursor: pointer; border-bottom: 3px solid transparent; margin-bottom: -2px; white-space: nowrap; }
@@ -50,7 +54,7 @@
 
     .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 20px; }
     .card { background: var(--card-bg); border-radius: 12px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); display: flex; flex-direction: column; justify-content: space-between; border-top: 4px solid var(--primary); }
-    .card.disaster { border-top-color: var(--warning); background: #fffbeb; }
+    .card.fuel { border-top-color: var(--fuel-color); background: #f0f9ff; }
 
     .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; gap: 8px; }
     .badge { background: #f1f5f9; color: var(--text-muted); font-size: 11px; font-weight: 600; padding: 4px 8px; border-radius: 6px; text-transform: uppercase; }
@@ -68,87 +72,78 @@
   <div class="container">
     <header>
       <div class="header-top">
-        <h1>BT <span>DRUK Notifier</span> Live Hub</h1>
+        <h1>🇧🇹 <span>DRUK Notifier</span> Official Feeds & Circulars</h1>
         <div class="actions-bar">
-          <input type="text" id="searchInput" class="search-bar" placeholder="Search live alerts...">
-          <button class="btn btn-warning" onclick="requestDevicePermissions()">🔔 Enable GPS & Push Alerts</button>
+          <select id="entityDropdown" class="entity-select" onchange="fetchFeeds()">
+            <option value="all">-- All Entities in Category --</option>
+          </select>
+          <input type="text" id="searchInput" class="search-bar" placeholder="Search notices & vacancies..." oninput="fetchFeeds()">
+          <button class="btn btn-warning" onclick="requestDevicePermissions()">🔔 GPS & Notifications</button>
         </div>
       </div>
 
       <div class="tabs" id="categoryTabs">
-        <button class="tab-btn active" data-category="all">All Live Feeds</button>
-        <button class="tab-btn" data-category="disasters" style="color:var(--warning)">⚠️ Disasters & Earthquakes</button>
+        <button class="tab-btn active" data-category="all">All Feeds</button>
+        <button class="tab-btn" data-category="ministries">Ministries (9)</button>
+        <button class="tab-btn" data-category="dzongkhags">Dzongkhags (20)</button>
         <button class="tab-btn" data-category="banks">Banks</button>
-        <button class="tab-btn" data-category="telecoms">Telecoms</button>
         <button class="tab-btn" data-category="insurance">Insurance</button>
+        <button class="tab-btn" data-category="telecoms">Telecoms</button>
         <button class="tab-btn" data-category="roadblocks">Roadblocks</button>
-        <button class="tab-btn" data-category="ministries">Ministries</button>
-        <button class="tab-btn" data-category="dzongkhags">Dzongkhags</button>
+        <button class="tab-btn" data-category="drc">DRC (Revenue)</button>
+        <button class="tab-btn" data-category="trade">Trade</button>
+        <button class="tab-btn" data-category="fuel" style="color:var(--fuel-color)">⛽ Fuel Prices</button>
       </div>
     </header>
 
-    <div class="grid" id="notificationsGrid"></div>
+    <div class="grid" id="feedsGrid"></div>
   </div>
 
   <script>
     let activeCategory = 'all';
+    let entitiesMap = {};
 
-    const categoryTabs = document.getElementById('categoryTabs');
-    const searchInput = document.getElementById('searchInput');
-    const grid = document.getElementById('notificationsGrid');
-
-    // --- DEVICE PERMISSIONS HANDLER (Location, Notifications, Camera/Mic, Storage) ---
-    async function requestDevicePermissions() {
-      // 1. Browser Push Notifications
-      if ('Notification' in window) {
-        const perm = await Notification.requestPermission();
-        if (perm === 'granted') {
-          new Notification('DRUK Notifier', { body: 'Live disaster emergency alerts activated successfully!' });
-        }
-      }
-
-      // 2. Geolocation / GPS Location
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          (pos) => { alert(`GPS Location acquired: Lat ${pos.coords.latitude.toFixed(2)}, Lng ${pos.coords.longitude.toFixed(2)}`); },
-          () => { console.warn('Location permission denied.'); }
-        );
-      }
-
-      // 3. Camera, Microphone & File Storage Access Check
-      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-        try {
-          const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-          alert('Camera, Microphone, and Media Storage permissions granted.');
-          stream.getTracks().forEach(track => track.stop());
-        } catch (e) {
-          console.warn('Camera/Mic permission denied.');
-        }
+    async function loadEntitiesMap() {
+      try {
+        const res = await fetch('/api/entities');
+        entitiesMap = await res.json();
+      } catch (err) {
+        console.error('Failed to load entities:', err);
       }
     }
 
-    // --- FETCH LIVE DATA FROM SERVER API ---
-    async function fetchLiveNotifications() {
-      let url = `/api/notifications?category=${activeCategory}&search=${encodeURIComponent(searchInput.value)}`;
+    async function fetchFeeds() {
+      const entitySelect = document.getElementById('entityDropdown');
+      const selectedEntity = entitySelect.value;
+      const searchQuery = document.getElementById('searchInput').value;
+
+      let url = `/api/notifications?category=${activeCategory}&search=${encodeURIComponent(searchQuery)}`;
+      if (selectedEntity && selectedEntity !== 'all') {
+        url += `&entity=${selectedEntity}`;
+      }
+
       try {
         const res = await fetch(url);
         const data = await res.json();
         renderCards(data);
       } catch (err) {
-        console.error('Failed to fetch live data:', err);
-        grid.innerHTML = `<div class="no-results">Unable to connect to live data feed.</div>`;
+        console.error('Error fetching feeds:', err);
+        document.getElementById('feedsGrid').innerHTML = `<div class="no-results">Unable to connect to live official feed.</div>`;
       }
     }
 
     function renderCards(items) {
+      const grid = document.getElementById('feedsGrid');
       grid.innerHTML = '';
+
       if (items.length === 0) {
-        grid.innerHTML = `<div class="no-results">No live updates found matching your filter.</div>`;
+        grid.innerHTML = `<div class="no-results">No recent updates, vacancies, or circulars found matching your filter.</div>`;
         return;
       }
+
       items.forEach(item => {
         const card = document.createElement('div');
-        card.className = item.category === 'disasters' ? 'card disaster' : 'card';
+        card.className = item.category === 'fuel' ? 'card fuel' : 'card';
         card.innerHTML = `
           <div>
             <div class="card-header">
@@ -162,26 +157,65 @@
             </div>
           </div>
           <div class="card-footer">
-            <a href="${item.link}" target="_blank" class="source-link">View Official Feed &rarr;</a>
+            <a href="${item.link}" target="_blank" class="source-link">View Official Website &rarr;</a>
           </div>
         `;
         grid.appendChild(card);
       });
     }
 
-    categoryTabs.addEventListener('click', (e) => {
+    function updateEntityDropdown(category) {
+      const dropdown = document.getElementById('entityDropdown');
+      dropdown.innerHTML = '<option value="all">-- All Entities in Category --</option>';
+
+      if (entitiesMap[category] && entitiesMap[category].length > 0) {
+        entitiesMap[category].forEach(ent => {
+          const opt = document.createElement('option');
+          opt.value = ent.id;
+          opt.textContent = ent.name;
+          dropdown.appendChild(opt);
+        });
+        dropdown.classList.add('visible');
+      } else {
+        dropdown.classList.remove('visible');
+      }
+    }
+
+    document.getElementById('categoryTabs').addEventListener('click', (e) => {
       if (e.target.classList.contains('tab-btn')) {
         document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
         e.target.classList.add('active');
         activeCategory = e.target.dataset.category;
-        fetchLiveNotifications();
+
+        updateEntityDropdown(activeCategory);
+        document.getElementById('entityDropdown').value = 'all';
+        fetchFeeds();
       }
     });
 
-    searchInput.addEventListener('input', fetchLiveNotifications);
-    
-    // Initial fetch on page load
-    fetchLiveNotifications();
+    async function requestDevicePermissions() {
+      if ('Notification' in window) {
+        await Notification.requestPermission();
+      }
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          pos => alert(`GPS Location acquired: ${pos.coords.latitude.toFixed(2)}, ${pos.coords.longitude.toFixed(2)}`),
+          () => console.warn('Location permission declined.')
+        );
+      }
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+          alert('Camera, Microphone, and Storage permissions granted.');
+          stream.getTracks().forEach(t => t.stop());
+        } catch (e) {
+          console.warn('Media permission denied.');
+        }
+      }
+    }
+
+    // Initialize on load
+    loadEntitiesMap().then(() => fetchFeeds());
   </script>
 </body>
 </html>
