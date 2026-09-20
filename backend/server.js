@@ -57,15 +57,14 @@ const entityDatabase = [
     ]
   },
 
-  // --- DZONGKHAGS (20 Dzongkhags represented with top hubs) ---
+  // --- DZONGKHAGS ---
   {
     id: 'thimphu-thromde',
     category: 'dzongkhags',
     entity: 'Thimphu Thromde',
     posts: [
       { id: 'tt-1', title: 'Municipal Waste Collection Schedule Update for Autumn', date: '2026-09-19', summary: 'Revised zoning timetable for green and dry waste segregation pickup across residential precincts.', link: 'https://www.thimphu.gov.bt/', location: 'Thimphu Thromde' },
-      { id: 'tt-2', title: 'Notice on Urban Land demarcation and Development Permits', date: '2026-09-14', summary: 'Advisory on building blueprint approvals and municipal compliance norms for construction.', link: 'https://www.thimphu.gov.bt/', location: 'Thimphu' },
-      { id: 'tt-3', title: 'Tender Call for Stormwater Drainage Upgradation', date: '2026-09-02', summary: 'Sealed bids invited from registered contractors for urban drainage rehabilitation works.', link: 'https://www.thimphu.gov.bt/', location: 'North Thimphu' }
+      { id: 'tt-2', title: 'Notice on Urban Land demarcation and Development Permits', date: '2026-09-14', summary: 'Advisory on building blueprint approvals and municipal compliance norms for construction.', link: 'https://www.thimphu.gov.bt/', location: 'Thimphu' }
     ]
   },
   {
@@ -73,16 +72,7 @@ const entityDatabase = [
     category: 'dzongkhags',
     entity: 'Chukha Dzongkhag Administration',
     posts: [
-      { id: 'cd-1', title: 'Phuentsholing-Chukha Regional Development Review', date: '2026-09-15', summary: 'Dzongkhag Tshogdue resolves priority rural farm road blacktopping and irrigation projects.', link: 'https://www.chukha.gov.bt/', location: 'Chukha' },
-      { id: 'cd-2', title: 'Vacancy Announcement for LBA and Support Staff', date: '2026-09-10', summary: 'Recruitment notice for administrative assistants and local service personnel.', link: 'https://www.chukha.gov.bt/', location: 'Chukha' }
-    ]
-  },
-  {
-    id: 'paro-dzongkhag',
-    category: 'dzongkhags',
-    entity: 'Paro Dzongkhag Administration',
-    posts: [
-      { id: 'pd-1', title: 'Cultural Heritage Preservation Guidelines for Tourism Season', date: '2026-09-18', summary: 'Strict waste management and visitor etiquette enforced around historical monastic structures.', link: 'https://www.paro.gov.bt/', location: 'Paro' }
+      { id: 'cd-1', title: 'Phuentsholing-Chukha Regional Development Review', date: '2026-09-15', summary: 'Dzongkhag Tshogdue resolves priority rural farm road blacktopping and irrigation projects.', link: 'https://www.chukha.gov.bt/', location: 'Chukha' }
     ]
   },
 
@@ -101,8 +91,7 @@ const entityDatabase = [
     category: 'banks',
     entity: 'Bhutan National Bank (BNB)',
     posts: [
-      { id: 'bnb-1', title: 'New Digital Onboarding and Secure Biometric Login', date: '2026-09-15', summary: 'BNB m-Token app updated with face ID and advanced biometric security layers.', link: 'https://www.bnb.bt/', location: 'Nationwide' },
-      { id: 'bnb-2', title: 'Vacancy for Assistant Relationship Managers', date: '2026-09-09', summary: 'Dynamic banking professionals sought for branch expansion operations.', link: 'https://www.bnb.bt/', location: 'Thimphu & Phuentsholing' }
+      { id: 'bnb-1', title: 'New Digital Onboarding and Secure Biometric Login', date: '2026-09-15', summary: 'BNB m-Token app updated with face ID and advanced biometric security layers.', link: 'https://www.bnb.bt/', location: 'Nationwide' }
     ]
   },
 
@@ -112,8 +101,7 @@ const entityDatabase = [
     category: 'insurance',
     entity: 'RICB (Royal Insurance Corporation of Bhutan)',
     posts: [
-      { id: 'ricb-1', title: 'Instant Digital Motor Insurance Renewal Portal', date: '2026-09-16', summary: 'Policyholders can now renew comprehensive vehicle insurance online with instant QR certificate generation.', link: 'https://www.ricb.com.bt/', location: 'Nationwide' },
-      { id: 'ricb-2', title: 'Life Insurance Dividend Declaration for 2025-2026', date: '2026-09-03', summary: 'Annual bonus rates announced for all participating life insurance policy beneficiaries.', link: 'https://www.ricb.com.bt/', location: 'Head Office' }
+      { id: 'ricb-1', title: 'Instant Digital Motor Insurance Renewal Portal', date: '2026-09-16', summary: 'Policyholders can now renew comprehensive vehicle insurance online with instant QR certificate generation.', link: 'https://www.ricb.com.bt/', location: 'Nationwide' }
     ]
   },
 
@@ -123,16 +111,7 @@ const entityDatabase = [
     category: 'telecoms',
     entity: 'Bhutan Telecom (BT)',
     posts: [
-      { id: 'bt-1', title: 'Expansion of High-Speed FTTH Fiber Lines in Thimphu and Phuntsholing', date: '2026-09-19', summary: 'Gigabit-speed broadband connectivity extended to new housing colonies.', link: 'https://www.bt.bt/', location: 'Thimphu & Phuentsholing' },
-      { id: 'bt-2', title: '5G Data Package Promotions and Roaming Upgrades', date: '2026-09-10', summary: 'New international roaming data bundles introduced for regional travelers.', link: 'https://www.bt.bt/', location: 'Nationwide' }
-    ]
-  },
-  {
-    id: 'tashicell',
-    category: 'telecoms',
-    entity: 'TashiCell',
-    posts: [
-      { id: 'tc-1', title: '4G LTE Network Optimization Across Eastern Dzongkhags', date: '2026-09-17', summary: 'Tower capacity upgrades completed in Trashigang, Mongar, and Samdrup Jongkhar.', link: 'https://www.tashicell.com/', location: 'Eastern Region' }
+      { id: 'bt-1', title: 'Expansion of High-Speed FTTH Fiber Lines in Thimphu and Phuntsholing', date: '2026-09-19', summary: 'Gigabit-speed broadband connectivity extended to new housing colonies.', link: 'https://www.bt.bt/', location: 'Thimphu & Phuentsholing' }
     ]
   },
 
@@ -142,49 +121,98 @@ const entityDatabase = [
     category: 'roadblocks',
     entity: 'Department of Surface Transport (DoST)',
     posts: [
-      { id: 'dost-1', title: 'Emergency Road Clearing Update on Gelephu-Trongsa Highway', date: '2026-09-20', summary: 'Monsoon debris cleared successfully. Traffic restored with cautionary speed limits.', link: 'https://www.moit.gov.bt/', location: 'Zhemgang-Trongsa Corridor' },
-      { id: 'dost-2', title: 'Weight Bridge Regulations and Axle Load Monitoring', date: '2026-09-12', summary: 'Strict enforcement of legal load limits for heavy commercial freight trucks.', link: 'https://www.moit.gov.bt/', location: ' Phuentsholing Checkpost' }
+      { id: 'dost-1', title: 'Emergency Road Clearing Update on Gelephu-Trongsa Highway', date: '2026-09-20', summary: 'Monsoon debris cleared successfully. Traffic restored with cautionary speed limits.', link: 'https://www.moit.gov.bt/', location: 'Zhemgang-Trongsa Corridor' }
     ]
   },
 
-  // --- NEW TAB: DRC (Department of Revenue and Customs) ---
+  // --- DRC ---
   {
     id: 'drc',
     category: 'drc',
     entity: 'Department of Revenue and Customs (DRC)',
     posts: [
-      { id: 'drc-1', title: 'Business Income Tax (BIT) Filing Deadline Reminder', date: '2026-09-18', summary: 'Taxpayers are reminded to submit reconciled financial statements through the RAMIS portal.', link: 'https://www.drc.gov.bt/', location: 'Nationwide' },
-      { id: 'drc-2', title: 'Customs Tariff Harmonization Guidelines for Importers', date: '2026-09-10', summary: 'Updated schedule of sales tax and customs duty exemptions for green technology imports.', link: 'https://www.drc.gov.bt/', location: 'All Regional Offices' },
-      { id: 'drc-3', title: 'GST Implementation and Compliance Circular', date: '2026-09-01', summary: 'Clarifications on e-invoice generation and mandatory registration thresholds for commercial entities.', link: 'https://www.drc.gov.bt/', location: 'Thimphu' }
+      { id: 'drc-1', title: 'Business Income Tax (BIT) Filing Deadline Reminder', date: '2026-09-18', summary: 'Taxpayers are reminded to submit reconciled financial statements through the RAMIS portal.', link: 'https://www.drc.gov.bt/', location: 'Nationwide' }
     ]
   },
 
-  // --- NEW TAB: TRADE ---
+  // --- TRADE ---
   {
     id: 'trade',
     category: 'trade',
     entity: 'Department of Trade',
     posts: [
-      { id: 'trade-1', title: 'Export Procedures for Bhutanese Agro-Produce', date: '2026-09-17', summary: 'Simplified export licensing protocols introduced to facilitate regional market access.', link: 'https://www.moice.gov.bt/', location: 'Phuentsholing & Gelephu' },
-      { id: 'trade-2', title: 'Foreign Direct Investment (FDI) Policy Guidelines', date: '2026-09-08', summary: 'New fast-track approval mechanisms for manufacturing and IT-enabled service investments.', link: 'https://www.moice.gov.bt/', location: 'Thimphu' }
+      { id: 'trade-1', title: 'Export Procedures for Bhutanese Agro-Produce', date: '2026-09-17', summary: 'Simplified export licensing protocols introduced to facilitate regional market access.', link: 'https://www.moice.gov.bt/', location: 'Phuentsholing & Gelephu' }
     ]
   },
 
-  // --- NEW TAB: FUEL PRICE UPDATES ---
+  // --- FUEL ---
   {
     id: 'fuel',
     category: 'fuel',
     entity: 'State Trading Corporation of Bhutan (STCBL - Petroleum Division)',
     posts: [
-      { id: 'fuel-1', title: 'Thimphu Station (Ramtokto / Jungshina) Fuel Rates', date: '2026-09-20', summary: 'Petrol (MS): Nu. 105.44 / Litre | Diesel (HSD): Nu. 106.77 / Litre. Rates effective immediately.', link: 'https://www.stcb.bt/bhutanpetroleum.php', location: 'Thimphu' },
-      { id: 'fuel-2', title: 'Phuentsholing Station (Chamkuna) Fuel Rates', date: '2026-09-20', summary: 'Petrol (MS): Nu. 102.48 / Litre | Diesel (HSD): Nu. 103.95 / Litre.', link: 'https://www.stcb.bt/bhutanpetroleum.php', location: 'Phuentsholing' },
-      { id: 'fuel-3', title: 'Wangduephodrang & Punakha Station (Nobding) Rates', date: '2026-09-20', summary: 'Petrol (MS): Nu. 107.34 / Litre | Diesel (HSD): Nu. 108.60 / Litre.', link: 'https://www.stcb.bt/bhutanpetroleum.php', location: 'Wangdue / Punakha' },
-      { id: 'fuel-4', title: 'Bumthang Station (Chumey) Fuel Rates', date: '2026-09-20', summary: 'Petrol (MS): Nu. 109.61 / Litre | Diesel (HSD): Nu. 111.01 / Litre.', link: 'https://www.stcb.bt/bhutanpetroleum.php', location: 'Bumthang' }
+      { id: 'fuel-1', title: 'Thimphu Station (Ramtokto / Jungshina) Fuel Rates', date: '2026-09-20', summary: 'Petrol (MS): Nu. 105.44 / Litre | Diesel (HSD): Nu. 106.77 / Litre.', link: 'https://www.stcb.bt/bhutanpetroleum.php', location: 'Thimphu' }
     ]
   }
 ];
 
-// --- API ENDPOINT: Get entities list for tab dropdowns ---
+// --- ROADWATCH FAILURE LIST DATA (Criticality Rank 1 & 2 Only) ---
+const roadWatchFailures = [
+  {
+    id: 'rw-1',
+    code: 'RSFD-2026-089',
+    highway: 'Wangdue - Trongsa Highway (Chuzomsa Section)',
+    failureType: 'Major Landslide & Debris Flow',
+    criticalityRank: 'Rank 1 (High Risk)',
+    severityColor: '#dc2626',
+    status: 'Road Blocked / Active Clearance',
+    reportedDate: '2026-09-19',
+    location: 'Km 142+500',
+    agency: 'DoST Regional Office Nobding',
+    link: 'https://roadwatch-rsfd.moit.gov.bt/rsfd/failure-list'
+  },
+  {
+    id: 'rw-2',
+    code: 'RSFD-2026-074',
+    highway: 'Lateral Road (Punakha - Gasa Corridor)',
+    failureType: 'Rock Slope Failure / Subsidence',
+    criticalityRank: 'Rank 1 (High Risk)',
+    severityColor: '#dc2626',
+    status: 'Cautionary Single-Lane Transit',
+    reportedDate: '2026-09-18',
+    location: 'Km 48+200',
+    agency: 'DoST Sub-Division Punakha',
+    link: 'https://roadwatch-rsfd.moit.gov.bt/rsfd/failure-list'
+  },
+  {
+    id: 'rw-3',
+    code: 'RSFD-2026-062',
+    highway: 'Phuentsholing - Thimphu Primary National Highway',
+    failureType: 'Debris Slide & Mudflow',
+    criticalityRank: 'Rank 2 (Medium-High Risk)',
+    severityColor: '#d97706',
+    status: 'Cleared with Ongoing Monitoring',
+    reportedDate: '2026-09-17',
+    location: 'Km 24+100 (Raxor)',
+    agency: 'DoST Regional Office Phuentsholing',
+    link: 'https://roadwatch-rsfd.moit.gov.bt/rsfd/failure-list'
+  },
+  {
+    id: 'rw-4',
+    code: 'RSFD-2026-051',
+    highway: 'Gelephu - Trongsa Highway',
+    failureType: 'Road Embankment Sinking / Slip',
+    criticalityRank: 'Rank 2 (Medium-High Risk)',
+    severityColor: '#d97706',
+    status: 'Monitored / Heavy Machinery Deployed',
+    reportedDate: '2026-09-16',
+    location: 'Km 88+400',
+    agency: 'DoST Regional Office Zhemgang',
+    link: 'https://roadwatch-rsfd.moit.gov.bt/rsfd/failure-list'
+  }
+];
+
+// API endpoint for entities list
 app.get('/api/entities', (req, res) => {
   const grouped = {};
   entityDatabase.forEach(item => {
@@ -196,7 +224,7 @@ app.get('/api/entities', (req, res) => {
   res.json(grouped);
 });
 
-// --- API ENDPOINT: Get live notifications / feeds filtered by category & entity ---
+// API endpoint for notifications / feeds
 app.get('/api/notifications', (req, res) => {
   const { category, entity, search } = req.query;
   let allPosts = [];
@@ -227,6 +255,11 @@ app.get('/api/notifications', (req, res) => {
   }
 
   res.json(allPosts);
+});
+
+// API endpoint for RoadWatch failures (Rank 1 & 2)
+app.get('/api/roadwatch/failures', (req, res) => {
+  res.json(roadWatchFailures);
 });
 
 app.listen(PORT, () => {
